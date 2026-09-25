@@ -94,6 +94,7 @@ export const AppLayout: React.FC = () => {
           onClose={closeReceiptModal}
           documento={docForReceipt.doc}
           tipoDoc={docForReceipt.tipo}
+          modoInicial={docForReceipt.modoInicial || 'proposta'}
         />
       )}
 

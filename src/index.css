@@ -25,3 +25,57 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: #f97316;
 }
+
+/* ==========================================================================
+   ESTILOS DE IMPRESSÃO PROFISSIONAL (A4 - PROPOSTA COMERCIAL & FICHA DE FÁBRICA)
+   Garante fundo 100% branco limpo, contraste WCAG, sem gasto de tinta e sem
+   elementos de interface vazando para o PDF.
+   ========================================================================== */
+@media print {
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Oculta tudo que não faz parte do documento imprimível */
+  body * {
+    visibility: hidden;
+  }
+
+  #printable-document, #printable-document * {
+    visibility: visible;
+  }
+
+  #printable-document {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  /* Previne quebras de linha feias no meio de tabelas ou blocos técnicos */
+  .page-break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}

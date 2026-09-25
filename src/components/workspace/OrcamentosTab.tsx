@@ -10,6 +10,7 @@ import {
   Search,
   Trash2,
   FileSpreadsheet,
+  FileText,
   X,
   MoreVertical,
   Check,
@@ -473,6 +474,17 @@ export const OrcamentosTab: React.FC = () => {
                           Ver na Fábrica
                         </Button>
                       )}
+
+                      {/* Botão de Acesso Rápido ao PDF da Proposta */}
+                      <button
+                        type="button"
+                        onClick={() => openReceiptModal(orc, 'orcamento', 'proposta')}
+                        className="min-h-[44px] px-2.5 sm:px-3 py-2 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-700/80 transition-colors cursor-pointer"
+                        title="Visualizar e Imprimir Proposta Oficial em PDF"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span className="hidden sm:inline">Proposta PDF</span>
+                      </button>
                     </div>
 
                     {/* Botão de Menu "..." (44x44px garantido) */}
@@ -518,12 +530,23 @@ export const OrcamentosTab: React.FC = () => {
                             <button
                               onClick={() => {
                                 setMenuAbertoId(null);
-                                openReceiptModal(orc, 'orcamento');
+                                openReceiptModal(orc, 'orcamento', 'proposta');
                               }}
                               className="w-full min-h-[48px] text-left px-3 py-2.5 rounded-xl text-neutral-200 hover:bg-neutral-800 flex items-center gap-3 cursor-pointer"
                             >
-                              <Eye className="w-5 h-5 text-neutral-400" />
-                              <span className="text-sm font-medium">Visualizar Proposta / Imprimir</span>
+                              <FileText className="w-5 h-5 text-amber-400" />
+                              <span className="text-sm font-medium">Proposta Comercial Formal (PDF)</span>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setMenuAbertoId(null);
+                                openReceiptModal(orc, 'orcamento', 'ficha_corte');
+                              }}
+                              className="w-full min-h-[48px] text-left px-3 py-2.5 rounded-xl text-neutral-200 hover:bg-neutral-800 flex items-center gap-3 cursor-pointer"
+                            >
+                              <Wrench className="w-5 h-5 text-sky-400" />
+                              <span className="text-sm font-medium">Ficha de Corte & Bancada (Oficina)</span>
                             </button>
 
                             <button
@@ -591,12 +614,23 @@ export const OrcamentosTab: React.FC = () => {
                             <button
                               onClick={() => {
                                 setMenuAbertoId(null);
-                                openReceiptModal(orc, 'orcamento');
+                                openReceiptModal(orc, 'orcamento', 'proposta');
                               }}
-                              className="w-full text-left px-3 py-2 text-neutral-200 hover:bg-neutral-800/80 flex items-center gap-2 cursor-pointer"
+                              className="w-full text-left px-3 py-2 text-neutral-200 hover:bg-neutral-800/80 flex items-center gap-2 cursor-pointer font-medium"
                             >
-                              <Eye className="w-3.5 h-3.5 text-neutral-400" />
-                              <span>Visualizar Proposta</span>
+                              <FileText className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Proposta Comercial (PDF)</span>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setMenuAbertoId(null);
+                                openReceiptModal(orc, 'orcamento', 'ficha_corte');
+                              }}
+                              className="w-full text-left px-3 py-2 text-neutral-200 hover:bg-neutral-800/80 flex items-center gap-2 cursor-pointer font-medium"
+                            >
+                              <Wrench className="w-3.5 h-3.5 text-sky-400" />
+                              <span>Ficha de Corte (Oficina)</span>
                             </button>
 
                             <button

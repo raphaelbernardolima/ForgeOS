@@ -8,7 +8,8 @@ import {
   Clock,
   Inbox,
   Send,
-  CheckCircle2
+  CheckCircle2,
+  Wrench
 } from 'lucide-react';
 import { useSerralheria } from '../../context/SerralheriaContext';
 import { StatusOS } from '../../types';
@@ -284,12 +285,12 @@ export const ProducaoKanbanTab: React.FC = () => {
                             <div className="flex items-center gap-1">
                               <button
                                 type="button"
-                                onClick={() => openReceiptModal(os, 'os')}
-                                className="p-2 text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-800 transition-colors text-xs flex items-center gap-1 cursor-pointer min-h-[44px]"
-                                title="Ficha de produção / corte"
+                                onClick={() => openReceiptModal(os, 'os', 'ficha_corte')}
+                                className="px-2.5 py-1.5 text-neutral-300 hover:text-white bg-neutral-900 border border-neutral-700/80 rounded-lg hover:bg-neutral-800 transition-colors text-xs flex items-center gap-1.5 cursor-pointer min-h-[44px]"
+                                title="Imprimir Ficha de Corte e Bancada (Fábrica)"
                               >
-                                <FileText className="w-4 h-4" />
-                                <span className="text-xs">Ficha</span>
+                                <Wrench className="w-4 h-4 text-sky-400" />
+                                <span className="text-xs font-semibold">Ficha de Corte</span>
                               </button>
 
                               <button

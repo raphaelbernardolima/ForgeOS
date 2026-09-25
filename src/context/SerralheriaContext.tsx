@@ -80,7 +80,7 @@ interface SerralheriaContextType {
   signatureModalOpen: boolean;
   selectedDocForSignature: { id: string; tipo: 'orcamento' | 'instalacao' } | null;
   receiptModalOpen: boolean;
-  docForReceipt: { doc: OrdemServico | OrçamentoItem; tipo: 'os' | 'orcamento' } | null;
+  docForReceipt: { doc: OrdemServico | OrçamentoItem; tipo: 'os' | 'orcamento'; modoInicial?: 'proposta' | 'ficha_corte' } | null;
 
   // Sistema de Feedback Global Imediato (UX Mandamento 1)
   toasts: ToastMessage[];
@@ -126,7 +126,7 @@ interface SerralheriaContextType {
   openSignatureModal: (id: string, tipo: 'orcamento' | 'instalacao') => void;
   closeSignatureModal: () => void;
   saveSignature: (sigUrl: string) => void;
-  openReceiptModal: (doc: OrdemServico | OrçamentoItem, tipo: 'os' | 'orcamento') => void;
+  openReceiptModal: (doc: OrdemServico | OrçamentoItem, tipo: 'os' | 'orcamento', modoInicial?: 'proposta' | 'ficha_corte') => void;
   closeReceiptModal: () => void;
   abrirNovoOrcamentoSimulador: () => void;
   adicionarOrcamento: (novoOrc: OrçamentoItem) => void;
@@ -220,7 +220,7 @@ export const SerralheriaProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [signatureModalOpen, setSignatureModalOpen] = useState<boolean>(false);
   const [selectedDocForSignature, setSelectedDocForSignature] = useState<{ id: string; tipo: 'orcamento' | 'instalacao' } | null>(null);
   const [receiptModalOpen, setReceiptModalOpen] = useState<boolean>(false);
-  const [docForReceipt, setDocForReceipt] = useState<{ doc: OrdemServico | OrçamentoItem; tipo: 'os' | 'orcamento' } | null>(null);
+  const [docForReceipt, setDocForReceipt] = useState<{ doc: OrdemServico | OrçamentoItem; tipo: 'os' | 'orcamento'; modoInicial?: 'proposta' | 'ficha_corte' } | null>(null);
 
   // Sistema de Feedback Global (UX Mandamento 1)
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -699,8 +699,8 @@ export const SerralheriaProvider: React.FC<{ children: ReactNode }> = ({ childre
     closeSignatureModal();
   };
 
-  const openReceiptModal = (doc: OrdemServico | OrçamentoItem, tipo: 'os' | 'orcamento') => {
-    setDocForReceipt({ doc, tipo });
+  const openReceiptModal = (doc: OrdemServico | OrçamentoItem, tipo: 'os' | 'orcamento', modoInicial: 'proposta' | 'ficha_corte' = 'proposta') => {
+    setDocForReceipt({ doc, tipo, modoInicial });
     setReceiptModalOpen(true);
   };
 

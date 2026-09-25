@@ -15,7 +15,11 @@ import {
   Check,
   Eye,
   Layers,
-  Phone
+  Phone,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+  Wrench
 } from 'lucide-react';
 import { useSerralheria } from '../../context/SerralheriaContext';
 import { gerarPecaSVG, calcularMetricas } from '../../lib/proceduralSvg';
@@ -33,6 +37,8 @@ export const OrcamentosTab: React.FC = () => {
     setBuscaOrcamentos,
     filtroStatusOrcamento,
     setFiltroStatusOrcamento,
+    modoSimplificado,
+    toggleModoSimplificado,
     aprovarOrcamento,
     excluirOrcamento,
     converterEmOS,
@@ -52,6 +58,9 @@ export const OrcamentosTab: React.FC = () => {
 
   // Controle de menu de ações secundárias por card
   const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
+
+  // Controle de expansão de detalhes técnicos no Modo Simplificado
+  const [detalhesTecnicosAbertosId, setDetalhesTecnicosAbertosId] = useState<string | null>(null);
 
   // Controle de visualização da biblioteca de modelos (fechada por padrão para não poluir a tela)
   const [mostrarModelos, setMostrarModelos] = useState<boolean>(false);
@@ -137,7 +146,21 @@ export const OrcamentosTab: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-stretch sm:self-auto">
+        <div className="flex items-center gap-2 self-stretch sm:self-auto flex-wrap">
+          {/* Alternador de Modo Simplificado vs Técnico */}
+          <button
+            onClick={toggleModoSimplificado}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer min-h-[44px] ${
+              modoSimplificado
+                ? 'bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25'
+                : 'bg-neutral-900 text-neutral-400 hover:text-white border-neutral-800'
+            }`}
+            title="Alternar entre Interface Simplificada (Oficina) e Modo Técnico (CAD)"
+          >
+            <Zap className="w-4 h-4 text-amber-400" />
+            <span>{modoSimplificado ? 'Interface Simplificada' : 'Modo Técnico'}</span>
+          </button>
+
           {/* Botão para abrir modelos apenas quando o usuário desejar */}
           <button
             onClick={() => setMostrarModelos(prev => !prev)}
@@ -160,6 +183,31 @@ export const OrcamentosTab: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Banner Explicativo do Modo Simplificado */}
+      {modoSimplificado && (
+        <div className="bg-amber-500/10 border border-amber-500/25 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-300 animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+              <Zap className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="font-bold text-white block">
+                Modo de Interface Simplificada Ativo
+              </span>
+              <span className="text-[11px] text-amber-200/80">
+                Foco no cliente, valores claros e envio rápido no WhatsApp sem termos técnicos complicados.
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={toggleModoSimplificado}
+            className="text-[11px] font-mono underline font-bold hover:text-white cursor-pointer self-start sm:self-auto shrink-0"
+          >
+            Mudar para Modo Técnico CAD
+          </button>
+        </div>
+      )}
 
       {/* Biblioteca de Modelos (Sob demanda, sem ocupar espaço fixo) */}
       {mostrarModelos && (
@@ -311,8 +359,6 @@ export const OrcamentosTab: React.FC = () => {
                       <div className="text-xs text-neutral-400 min-w-0 flex-1">
                         <p className="text-neutral-200 font-medium truncate">{orc.descricao}</p>
                         <div className="flex items-center gap-2 mt-1 text-[11px] text-neutral-400">
-                          <span>{metricas.pesoEstimadoKg} kg aço</span>
-                          <span>·</span>
                           <span className="flex items-center gap-1 truncate">
                             <span
                               className="w-2 h-2 rounded-full shrink-0"
@@ -320,6 +366,12 @@ export const OrcamentosTab: React.FC = () => {
                             />
                             <span className="truncate">{orc.corNome}</span>
                           </span>
+                          {!modoSimplificado && (
+                            <>
+                              <span>·</span>
+                              <span>{metricas.pesoEstimadoKg} kg aço</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -333,6 +385,42 @@ export const OrcamentosTab: React.FC = () => {
                       </span>
                     </div>
                   </div>
+
+                  {/* Detalhes Técnicos Expansíveis no Modo Simplificado */}
+                  {modoSimplificado ? (
+                    <div className="mb-2">
+                      <button
+                        type="button"
+                        onClick={() => setDetalhesTecnicosAbertosId(detalhesTecnicosAbertosId === orc.id ? null : orc.id)}
+                        className="text-[11px] text-neutral-400 hover:text-amber-400 flex items-center gap-1 font-mono transition-colors cursor-pointer py-0.5"
+                      >
+                        <Wrench className="w-3 h-3 text-neutral-500" />
+                        <span>{detalhesTecnicosAbertosId === orc.id ? 'Ocultar detalhes técnicos' : 'Ver detalhes técnicos (aço, solda e custos)'}</span>
+                        {detalhesTecnicosAbertosId === orc.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </button>
+
+                      {detalhesTecnicosAbertosId === orc.id && (
+                        <div className="mt-1.5 p-2 bg-[#090b10] border border-neutral-800/80 rounded-lg grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono text-neutral-300 animate-in fade-in">
+                          <div>
+                            <span className="text-neutral-500 text-[10px] block">Aço Estrutural:</span>
+                            <span>{metricas.pesoEstimadoKg} kg</span>
+                          </div>
+                          <div>
+                            <span className="text-neutral-500 text-[10px] block">Metragem:</span>
+                            <span>{metricas.metrosLinearTotal} m</span>
+                          </div>
+                          <div>
+                            <span className="text-neutral-500 text-[10px] block">Custo Direto:</span>
+                            <span>R$ {metricas.custoTotalProducao.toFixed(0)}</span>
+                          </div>
+                          <div>
+                            <span className="text-neutral-500 text-[10px] block">Margem:</span>
+                            <span className="text-emerald-400 font-bold">{metricas.margemEstimada}%</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
 
                   {/* Rodapé do Card: Ações Primárias Claras + Menu "..." */}
                   <div className="pt-2.5 border-t border-neutral-800/60 flex items-center justify-between gap-2">

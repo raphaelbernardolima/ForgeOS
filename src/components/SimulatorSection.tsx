@@ -21,8 +21,13 @@ import {
   Plus,
   Palette,
   Eye,
-  Ruler
+  Ruler,
+  ChevronDown,
+  ChevronUp,
+  Zap,
+  Wrench
 } from 'lucide-react';
+import { useSerralheria } from '../context/SerralheriaContext';
 
 interface SimulatorSectionProps {
   initialConfig?: {
@@ -83,6 +88,39 @@ export const SimulatorSection: React.FC<SimulatorSectionProps> = ({
   const [filtroTipoPreset, setFiltroTipoPreset] = useState<'todos' | TipoPeca | 'custom'>('todos');
   const [mostrarPresets, setMostrarPresets] = useState<boolean>(false);
   const [abaMobileSimulador, setAbaMobileSimulador] = useState<'visual' | 'medidas' | 'avancado'>('visual');
+
+  // Modo Simplificado (persiste no contexto) e painel expansível de configurações avançadas
+  const { modoSimplificado, setModoSimplificado } = useSerralheria();
+  const [mostrarConfigAvancadas, setMostrarConfigAvancadas] = useState<boolean>(!modoSimplificado);
+
+  // Sincronizar se o usuário alterar o modo global
+  React.useEffect(() => {
+    setMostrarConfigAvancadas(!modoSimplificado);
+  }, [modoSimplificado]);
+
+  // Medidas padrão rápidas da rotina brasileira
+  const medidasRapidas: Record<TipoPeca, { l: number; a: number; label: string }[]> = {
+    portao: [
+      { l: 250, a: 220, label: '2,50 × 2,20m' },
+      { l: 300, a: 220, label: '3,00 × 2,20m' },
+      { l: 350, a: 240, label: '3,50 × 2,40m' }
+    ],
+    grade: [
+      { l: 120, a: 120, label: '1,20 × 1,20m' },
+      { l: 150, a: 120, label: '1,50 × 1,20m' },
+      { l: 200, a: 150, label: '2,00 × 1,50m' }
+    ],
+    'guarda-corpo': [
+      { l: 200, a: 110, label: '2,00 × 1,10m' },
+      { l: 300, a: 110, label: '3,00 × 1,10m' },
+      { l: 400, a: 110, label: '4,00 × 1,10m' }
+    ],
+    corrimao: [
+      { l: 200, a: 95, label: '2,00 × 0,95m' },
+      { l: 300, a: 95, label: '3,00 × 0,95m' },
+      { l: 400, a: 95, label: '4,00 × 0,95m' }
+    ]
+  };
 
   const TAGS_SUGERIDAS = [
     'Minimalista',
@@ -297,8 +335,42 @@ export const SimulatorSection: React.FC<SimulatorSectionProps> = ({
           </p>
         </div>
 
-        {/* Ações Rápidas: Modelos Prontos + Salvar Estilo + Semente Aleatória */}
+        {/* Ações Rápidas: Alternar Modo Simplificado vs Técnico + Modelos Prontos */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Seletor de Modo Simplificado vs Modo Técnico */}
+          <div className="flex items-center p-1 bg-[#12161f] border border-neutral-700/80 rounded-xl">
+            <button
+              type="button"
+              onClick={() => {
+                setModoSimplificado(true);
+                setMostrarConfigAvancadas(false);
+              }}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                modoSimplificado
+                  ? 'bg-amber-500 text-neutral-950 shadow-xs'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span>Modo Simplificado</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setModoSimplificado(false);
+                setMostrarConfigAvancadas(true);
+              }}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                !modoSimplificado
+                  ? 'bg-neutral-800 text-white shadow-xs'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Modo Técnico CAD</span>
+            </button>
+          </div>
+
           {/* Botão Ver Modelos Prontos */}
           <button
             onClick={() => setMostrarPresets(prev => !prev)}
@@ -312,47 +384,49 @@ export const SimulatorSection: React.FC<SimulatorSectionProps> = ({
             <span>{mostrarPresets ? 'Ocultar Modelos' : `Modelos Prontos (${presets.length})`}</span>
           </button>
 
-          {/* Botão Salvar Estilo Favorito */}
-          <button
-            onClick={() => {
-              setNomeNovoEstilo(`Estilo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)} ${genes.familia.charAt(0).toUpperCase() + genes.familia.slice(1)}`);
-              setModalSalvarEstiloOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white border border-neutral-700 rounded-lg text-xs font-medium transition-colors"
-            title="Salvar este desenho e acabamento na biblioteca de modelos favoritos"
-          >
-            <Bookmark className="w-3.5 h-3.5" />
-            <span>Salvar como Modelo</span>
-          </button>
+          {/* No Modo Técnico, expor Botão Salvar Estilo, Semente e Sortear */}
+          {(!modoSimplificado || mostrarConfigAvancadas) && (
+            <>
+              <button
+                onClick={() => {
+                  setNomeNovoEstilo(`Estilo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)} ${genes.familia.charAt(0).toUpperCase() + genes.familia.slice(1)}`);
+                  setModalSalvarEstiloOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white border border-neutral-700 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                title="Salvar este desenho e acabamento na biblioteca de modelos favoritos"
+              >
+                <Bookmark className="w-3.5 h-3.5" />
+                <span>Salvar como Modelo</span>
+              </button>
 
-          {/* Seed Input */}
-          <div className="flex items-center bg-[#12161f] border border-neutral-800 rounded-lg px-2.5 py-1 text-xs font-mono">
-            <label htmlFor={seedInputId} className="text-neutral-500 mr-2">Variação:</label>
-            <input
-              id={seedInputId}
-              type="number"
-              value={seed}
-              onChange={(e) => {
-                const s = parseInt(e.target.value) || 1;
-                setSeed(s);
-                setGenes(seedParaGenes(s, tipo));
-                setPresetAtivoId(null);
-              }}
-              className="w-14 bg-transparent text-amber-400 font-semibold focus:outline-none tabular-nums"
-            />
-          </div>
+              <div className="flex items-center bg-[#12161f] border border-neutral-800 rounded-lg px-2.5 py-1 text-xs font-mono">
+                <label htmlFor={seedInputId} className="text-neutral-500 mr-2">Variação:</label>
+                <input
+                  id={seedInputId}
+                  type="number"
+                  value={seed}
+                  onChange={(e) => {
+                    const s = parseInt(e.target.value) || 1;
+                    setSeed(s);
+                    setGenes(seedParaGenes(s, tipo));
+                    setPresetAtivoId(null);
+                  }}
+                  className="w-14 bg-transparent text-amber-400 font-semibold focus:outline-none tabular-nums"
+                />
+              </div>
 
-          {/* Gerar Design Único */}
-          <button
-            onClick={() => {
-              handleSeedRandom();
-              setPresetAtivoId(null);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg text-xs font-medium transition-colors border border-neutral-700 active:scale-95"
-          >
-            <Dices className="w-3.5 h-3.5 text-amber-400" />
-            <span>Sortear Outro</span>
-          </button>
+              <button
+                onClick={() => {
+                  handleSeedRandom();
+                  setPresetAtivoId(null);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg text-xs font-medium transition-colors border border-neutral-700 active:scale-95 cursor-pointer"
+              >
+                <Dices className="w-3.5 h-3.5 text-amber-400" />
+                <span>Sortear Outro</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -700,9 +774,35 @@ export const SimulatorSection: React.FC<SimulatorSectionProps> = ({
 
             {/* Dimensões em CM */}
             <div>
-              <label className="text-xs font-mono uppercase tracking-wider text-neutral-400 block mb-2 font-medium">
-                2. Dimensões Reais da Peça (cm)
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-mono uppercase tracking-wider text-neutral-400 font-medium">
+                  2. Dimensões Reais da Peça (cm)
+                </label>
+                <span className="text-xs font-mono text-amber-400 font-bold">
+                  {(dimensoes.largura / 100).toFixed(2)}m × {(dimensoes.altura / 100).toFixed(2)}m
+                </span>
+              </div>
+
+              {/* Atalhos Rápidos com 1 Toque para Oficina */}
+              {medidasRapidas[tipo] && (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-2.5 scrollbar-none">
+                  {medidasRapidas[tipo].map(m => (
+                    <button
+                      key={m.label}
+                      type="button"
+                      onClick={() => setDimensoes({ largura: m.l, altura: m.a })}
+                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-mono whitespace-nowrap border transition-colors cursor-pointer ${
+                        dimensoes.largura === m.l && dimensoes.altura === m.a
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold'
+                          : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor={larguraId} className="text-[11px] text-neutral-400 font-mono block mb-1">Largura (cm)</label>
@@ -768,196 +868,229 @@ export const SimulatorSection: React.FC<SimulatorSectionProps> = ({
                 ))}
               </div>
             </div>
+
+            {/* Botão de Alternar Configurações Avançadas */}
+            <div className="pt-2 border-t border-neutral-800">
+              <button
+                type="button"
+                onClick={() => setMostrarConfigAvancadas(prev => !prev)}
+                className={`w-full py-2.5 px-3 rounded-xl border flex items-center justify-between transition-all cursor-pointer min-h-[44px] ${
+                  mostrarConfigAvancadas
+                    ? 'bg-neutral-800/90 border-amber-500/50 text-amber-300'
+                    : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:text-white hover:border-neutral-700'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-amber-400 shrink-0" />
+                  <div className="text-left">
+                    <span className="text-xs font-bold block">
+                      {mostrarConfigAvancadas ? 'Configurações Avançadas (Abertas)' : 'Configurações Avançadas'}
+                    </span>
+                    <span className="text-[10px] text-neutral-400 block">
+                      {mostrarConfigAvancadas
+                        ? 'Clique para recolher e simplificar os controles'
+                        : 'Espaçamento milimétrico, molduras, ângulos e nós'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-[11px] text-neutral-400 shrink-0 ml-2">
+                  <span>{mostrarConfigAvancadas ? 'Recolher' : 'Abrir'}</span>
+                  {mostrarConfigAvancadas ? <ChevronUp className="w-4 h-4 text-amber-400" /> : <ChevronDown className="w-4 h-4 text-neutral-400" />}
+                </div>
+              </button>
+            </div>
           </div>
 
           {/* BLOCO 2: PARÂMETROS TÉCNICOS CAD (Aba Avançado ou Desktop) */}
-          <div className={`space-y-6 ${abaMobileSimulador === 'medidas' ? 'hidden lg:block' : 'block'}`}>
-            {/* Seletor de Família Matemática */}
-            <div>
-              <label className="text-xs font-mono uppercase tracking-wider text-neutral-400 block mb-2 font-medium">
-                3. Padrão Visual das Barras
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {(['reto', 'ondulado', 'cruzado', 'geometrico'] as FamiliaPadrao[]).map(fam => (
-                  <button
-                    key={fam}
-                    type="button"
-                    onClick={() => handleGeneChange('familia', fam)}
-                    className={`py-2 px-3 rounded-lg text-xs font-medium capitalize transition-all border text-left flex items-center justify-between cursor-pointer min-h-[40px] ${
-                      genes.familia === fam
-                        ? 'bg-amber-500/10 border-amber-500 text-amber-400 font-semibold'
-                        : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-700'
-                    }`}
-                  >
-                    <span>{fam === 'geometrico' ? 'Geométrico (Grid)' : fam}</span>
-                    {genes.familia === fam && <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Sliders dos Genes Contínuos */}
-            <div className="space-y-4 pt-2 border-t border-neutral-800">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono uppercase tracking-wider text-neutral-400 font-medium">
-                  4. Ajuste Fino dos Barrotes & Perfis
-                </span>
-                <Sliders className="w-3.5 h-3.5 text-neutral-500" />
-              </div>
-
-              {/* Espaçamento */}
+          {(!modoSimplificado || mostrarConfigAvancadas) && (
+            <div className={`space-y-6 pt-2 border-t border-neutral-800/80 animate-in fade-in duration-200 ${abaMobileSimulador === 'medidas' ? 'hidden lg:block' : 'block'}`}>
+              {/* Seletor de Família Matemática */}
               <div>
-                <div className="flex justify-between text-xs font-mono text-neutral-300 mb-1">
-                  <label htmlFor={espacamentoId} className="cursor-pointer">Espaçamento entre barras</label>
-                  <span className="text-amber-400 tabular-nums">{genes.espacamento} cm</span>
+                <label className="text-xs font-mono uppercase tracking-wider text-neutral-400 block mb-2 font-medium">
+                  3. Padrão Visual das Barras
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['reto', 'ondulado', 'cruzado', 'geometrico'] as FamiliaPadrao[]).map(fam => (
+                    <button
+                      key={fam}
+                      type="button"
+                      onClick={() => handleGeneChange('familia', fam)}
+                      className={`py-2 px-3 rounded-lg text-xs font-medium capitalize transition-all border text-left flex items-center justify-between cursor-pointer min-h-[40px] ${
+                        genes.familia === fam
+                          ? 'bg-amber-500/10 border-amber-500 text-amber-400 font-semibold'
+                          : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-700'
+                      }`}
+                    >
+                      <span>{fam === 'geometrico' ? 'Geométrico (Grid)' : fam}</span>
+                      {genes.familia === fam && <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
+                    </button>
+                  ))}
                 </div>
-                <input
-                  id={espacamentoId}
-                  type="range"
-                  min={5}
-                  max={30}
-                  step={0.5}
-                  value={genes.espacamento}
-                  onChange={(e) => handleGeneChange('espacamento', parseFloat(e.target.value))}
-                  className="w-full accent-amber-500 cursor-pointer h-6"
-                />
               </div>
 
-              {/* Espessura */}
-              <div>
-                <div className="flex justify-between text-xs font-mono text-neutral-300 mb-1">
-                  <label htmlFor={espessuraId} className="cursor-pointer">Espessura do perfil</label>
-                  <span className="text-amber-400 tabular-nums">{genes.espessura} cm</span>
+              {/* Sliders dos Genes Contínuos */}
+              <div className="space-y-4 pt-2 border-t border-neutral-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono uppercase tracking-wider text-neutral-400 font-medium">
+                    4. Ajuste Fino dos Barrotes & Perfis
+                  </span>
+                  <Sliders className="w-3.5 h-3.5 text-neutral-500" />
                 </div>
-                <input
-                  id={espessuraId}
-                  type="range"
-                  min={1}
-                  max={8}
-                  step={0.2}
-                  value={genes.espessura}
-                  onChange={(e) => handleGeneChange('espessura', parseFloat(e.target.value))}
-                  className="w-full accent-amber-500 cursor-pointer h-6"
-                />
-              </div>
 
-              {/* Ângulo */}
-              <div>
-                <div className="flex justify-between text-xs font-mono text-neutral-300 mb-1">
-                  <label htmlFor={anguloId} className="cursor-pointer">Inclinação / Ângulo</label>
-                  <span className="text-amber-400 tabular-nums">{genes.angulo}°</span>
-                </div>
-                <input
-                  id={anguloId}
-                  type="range"
-                  min={0}
-                  max={90}
-                  step={1}
-                  value={genes.angulo}
-                  onChange={(e) => handleGeneChange('angulo', parseFloat(e.target.value))}
-                  className="w-full accent-amber-500 cursor-pointer h-6"
-                />
-              </div>
-
-              {/* Assimetria */}
-              <div>
-                <div className="flex justify-between text-xs font-mono text-neutral-300 mb-1">
-                  <label htmlFor={assimetriaId} className="cursor-pointer">Ritmo das Barras</label>
-                  <span className="text-amber-400 tabular-nums">{genes.assimetria}</span>
-                </div>
-                <input
-                  id={assimetriaId}
-                  type="range"
-                  min={-1}
-                  max={1}
-                  step={0.05}
-                  value={genes.assimetria}
-                  onChange={(e) => handleGeneChange('assimetria', parseFloat(e.target.value))}
-                  className="w-full accent-amber-500 cursor-pointer h-6"
-                />
-              </div>
-
-              {/* Gene específico: Corrimão (Inclinação de Escada) */}
-              {tipo === 'corrimao' && (
+                {/* Espaçamento */}
                 <div>
                   <div className="flex justify-between text-xs font-mono text-neutral-300 mb-1">
-                    <label htmlFor={inclinacaoId} className="cursor-pointer">Inclinação da Escada (Graus)</label>
-                    <span className="text-amber-400 tabular-nums">{genes.inclinacaoEscada || 30}°</span>
+                    <label htmlFor={espacamentoId} className="cursor-pointer">Espaçamento entre barras</label>
+                    <span className="text-amber-400 tabular-nums">{genes.espacamento} cm</span>
                   </div>
                   <input
-                    id={inclinacaoId}
+                    id={espacamentoId}
                     type="range"
-                    min={0}
-                    max={45}
-                    step={1}
-                    value={genes.inclinacaoEscada || 30}
-                    onChange={(e) => handleGeneChange('inclinacaoEscada', parseFloat(e.target.value))}
+                    min={5}
+                    max={30}
+                    step={0.5}
+                    value={genes.espacamento}
+                    onChange={(e) => handleGeneChange('espacamento', parseFloat(e.target.value))}
                     className="w-full accent-amber-500 cursor-pointer h-6"
                   />
                 </div>
-              )}
 
-              {/* Gene específico: Portão (Moldura e Estilo) */}
-              {tipo === 'portao' && (
-                <div className="pt-2 border-t border-neutral-800/60 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-neutral-300">Requadro / Moldura Perimetral</span>
+                {/* Espessura */}
+                <div>
+                  <div className="flex justify-between text-xs font-mono text-neutral-300 mb-1">
+                    <label htmlFor={espessuraId} className="cursor-pointer">Espessura do perfil</label>
+                    <span className="text-amber-400 tabular-nums">{genes.espessura} cm</span>
+                  </div>
+                  <input
+                    id={espessuraId}
+                    type="range"
+                    min={1}
+                    max={8}
+                    step={0.2}
+                    value={genes.espessura}
+                    onChange={(e) => handleGeneChange('espessura', parseFloat(e.target.value))}
+                    className="w-full accent-amber-500 cursor-pointer h-6"
+                  />
+                </div>
+
+                {/* Ângulo */}
+                <div>
+                  <div className="flex justify-between text-xs font-mono text-neutral-300 mb-1">
+                    <label htmlFor={anguloId} className="cursor-pointer">Inclinação / Ângulo</label>
+                    <span className="text-amber-400 tabular-nums">{genes.angulo}°</span>
+                  </div>
+                  <input
+                    id={anguloId}
+                    type="range"
+                    min={0}
+                    max={90}
+                    step={1}
+                    value={genes.angulo}
+                    onChange={(e) => handleGeneChange('angulo', parseFloat(e.target.value))}
+                    className="w-full accent-amber-500 cursor-pointer h-6"
+                  />
+                </div>
+
+                {/* Assimetria */}
+                <div>
+                  <div className="flex justify-between text-xs font-mono text-neutral-300 mb-1">
+                    <label htmlFor={assimetriaId} className="cursor-pointer">Ritmo das Barras</label>
+                    <span className="text-amber-400 tabular-nums">{genes.assimetria}</span>
+                  </div>
+                  <input
+                    id={assimetriaId}
+                    type="range"
+                    min={-1}
+                    max={1}
+                    step={0.05}
+                    value={genes.assimetria}
+                    onChange={(e) => handleGeneChange('assimetria', parseFloat(e.target.value))}
+                    className="w-full accent-amber-500 cursor-pointer h-6"
+                  />
+                </div>
+
+                {/* Gene específico: Corrimão (Inclinação de Escada) */}
+                {tipo === 'corrimao' && (
+                  <div>
+                    <div className="flex justify-between text-xs font-mono text-neutral-300 mb-1">
+                      <label htmlFor={inclinacaoId} className="cursor-pointer">Inclinação da Escada (Graus)</label>
+                      <span className="text-amber-400 tabular-nums">{genes.inclinacaoEscada || 30}°</span>
+                    </div>
                     <input
-                      type="checkbox"
-                      checked={genes.temMoldura ?? true}
-                      onChange={(e) => handleGeneChange('temMoldura', e.target.checked)}
-                      className="accent-amber-500 w-5 h-5 cursor-pointer"
+                      id={inclinacaoId}
+                      type="range"
+                      min={0}
+                      max={45}
+                      step={1}
+                      value={genes.inclinacaoEscada || 30}
+                      onChange={(e) => handleGeneChange('inclinacaoEscada', parseFloat(e.target.value))}
+                      className="w-full accent-amber-500 cursor-pointer h-6"
                     />
                   </div>
+                )}
 
-                  {(genes.temMoldura ?? true) && (
-                    <div className="grid grid-cols-2 gap-1.5 pt-1">
-                      {(['tubular', 'industrial', 'cantoneira', 'minimalista'] as EstiloMoldura[]).map(est => (
-                        <button
-                          key={est}
-                          type="button"
-                          onClick={() => handleGeneChange('estiloMoldura', est)}
-                          className={`text-[11px] py-1.5 px-2 rounded-lg border font-mono capitalize text-center cursor-pointer min-h-[36px] ${
-                            genes.estiloMoldura === est
-                              ? 'bg-neutral-800 border-amber-400 text-amber-300 font-bold'
-                              : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
-                          }`}
-                        >
-                          {est}
-                        </button>
-                      ))}
+                {/* Gene específico: Portão (Moldura e Estilo) */}
+                {tipo === 'portao' && (
+                  <div className="pt-2 border-t border-neutral-800/60 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-neutral-300">Requadro / Moldura Perimetral</span>
+                      <input
+                        type="checkbox"
+                        checked={genes.temMoldura ?? true}
+                        onChange={(e) => handleGeneChange('temMoldura', e.target.checked)}
+                        className="accent-amber-500 w-5 h-5 cursor-pointer"
+                      />
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
 
-            {/* Ação de Salvar Combinação como Estilo nos Controles */}
-            <div className="pt-3 border-t border-neutral-800/80">
-              <div className="p-3.5 rounded-xl border border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-transparent flex items-center justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-1.5 text-xs font-mono text-amber-400 font-semibold uppercase">
-                    <Star className="w-3.5 h-3.5 fill-amber-400/20" />
-                    <span>Salvar como Modelo</span>
+                    {(genes.temMoldura ?? true) && (
+                      <div className="grid grid-cols-2 gap-1.5 pt-1">
+                        {(['tubular', 'industrial', 'cantoneira', 'minimalista'] as EstiloMoldura[]).map(est => (
+                          <button
+                            key={est}
+                            type="button"
+                            onClick={() => handleGeneChange('estiloMoldura', est)}
+                            className={`text-[11px] py-1.5 px-2 rounded-lg border font-mono capitalize text-center cursor-pointer min-h-[36px] ${
+                              genes.estiloMoldura === est
+                                ? 'bg-neutral-800 border-amber-400 text-amber-300 font-bold'
+                                : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
+                            }`}
+                          >
+                            {est}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <p className="text-[11px] text-neutral-400 mt-0.5 line-clamp-1">
-                    Guarde este padrão ({genes.familia}, {genes.espessura}cm) para reaproveitar.
-                  </p>
+                )}
+              </div>
+
+              {/* Ação de Salvar Combinação como Estilo nos Controles */}
+              <div className="pt-3 border-t border-neutral-800/80">
+                <div className="p-3.5 rounded-xl border border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-transparent flex items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-1.5 text-xs font-mono text-amber-400 font-semibold uppercase">
+                      <Star className="w-3.5 h-3.5 fill-amber-400/20" />
+                      <span>Salvar como Modelo</span>
+                    </div>
+                    <p className="text-[11px] text-neutral-400 mt-0.5 line-clamp-1">
+                      Guarde este padrão ({genes.familia}, {genes.espessura}cm) para reaproveitar.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNomeNovoEstilo(`Estilo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)} ${genes.familia.charAt(0).toUpperCase() + genes.familia.slice(1)}`);
+                      setModalSalvarEstiloOpen(true);
+                    }}
+                    className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold rounded-lg text-xs font-mono transition-all shadow-md active:scale-95 whitespace-nowrap cursor-pointer min-h-[40px]"
+                  >
+                    <Bookmark className="w-3.5 h-3.5" />
+                    <span>Salvar Modelo</span>
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNomeNovoEstilo(`Estilo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)} ${genes.familia.charAt(0).toUpperCase() + genes.familia.slice(1)}`);
-                    setModalSalvarEstiloOpen(true);
-                  }}
-                  className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold rounded-lg text-xs font-mono transition-all shadow-md active:scale-95 whitespace-nowrap cursor-pointer min-h-[40px]"
-                >
-                  <Bookmark className="w-3.5 h-3.5" />
-                  <span>Salvar Modelo</span>
-                </button>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Botão de Retorno ao Desenho no Mobile */}
           <div className="lg:hidden pt-2 border-t border-neutral-800">

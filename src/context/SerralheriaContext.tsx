@@ -67,6 +67,11 @@ interface SerralheriaContextType {
   filtroStatusOrcamento: string;
   setFiltroStatusOrcamento: (val: string) => void;
 
+  // Modo de Interface (Simplificada para serralheiros / Avançada técnica)
+  modoSimplificado: boolean;
+  setModoSimplificado: (val: boolean | ((prev: boolean) => boolean)) => void;
+  toggleModoSimplificado: () => void;
+
   // Configuração de Edição no CAD
   editingConfig: EditingConfig | null;
   setEditingConfig: (cfg: EditingConfig | null) => void;
@@ -140,6 +145,42 @@ export const SerralheriaProvider: React.FC<{ children: ReactNode }> = ({ childre
   // Filtros e busca rápida
   const [buscaOrcamentos, setBuscaOrcamentos] = useState<string>('');
   const [filtroStatusOrcamento, setFiltroStatusOrcamento] = useState<string>('todos');
+
+  // Modo de Interface: Simplificada para serralheiros (padrão ativo) vs Técnica Avançada
+  const SIMPLIFICADO_STORAGE_KEY = 'forjaos_modo_simplificado';
+  const [modoSimplificado, setModoSimplificadoState] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem(SIMPLIFICADO_STORAGE_KEY);
+      if (stored !== null) return stored !== 'false';
+    } catch (e) {
+      console.error('Erro ao ler modo simplificado do localStorage', e);
+    }
+    return true; // Padrão: Modo Simplificado ativado para serralheiros com pouca afinidade digital
+  });
+
+  const setModoSimplificado = (val: boolean | ((prev: boolean) => boolean)) => {
+    setModoSimplificadoState(prev => {
+      const nextVal = typeof val === 'function' ? val(prev) : val;
+      try {
+        localStorage.setItem(SIMPLIFICADO_STORAGE_KEY, String(nextVal));
+      } catch (e) {}
+      return nextVal;
+    });
+  };
+
+  const toggleModoSimplificado = () => {
+    setModoSimplificado(prev => {
+      const next = !prev;
+      notify(
+        next ? 'Interface Simplificada ativada' : 'Modo Técnico Avançado ativado',
+        'info',
+        next
+          ? 'Formulários limpos, botões grandes e foco em orçamentos rápidos pelo WhatsApp.'
+          : 'Controles CAD completos, nós de solda e métricas detalhadas expostos.'
+      );
+      return next;
+    });
+  };
 
   // Presets com persistência local
   const [presets, setPresets] = useState<PresetEstilo[]>(() => {
@@ -685,6 +726,9 @@ export const SerralheriaProvider: React.FC<{ children: ReactNode }> = ({ childre
         setBuscaOrcamentos,
         filtroStatusOrcamento,
         setFiltroStatusOrcamento,
+        modoSimplificado,
+        setModoSimplificado,
+        toggleModoSimplificado,
         editingConfig,
         setEditingConfig,
         signatureModalOpen,

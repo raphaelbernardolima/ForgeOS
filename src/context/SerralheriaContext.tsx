@@ -124,6 +124,7 @@ interface SerralheriaContextType {
   openReceiptModal: (doc: OrdemServico | OrçamentoItem, tipo: 'os' | 'orcamento') => void;
   closeReceiptModal: () => void;
   abrirNovoOrcamentoSimulador: () => void;
+  adicionarOrcamento: (novoOrc: OrçamentoItem) => void;
 }
 
 const SerralheriaContext = createContext<SerralheriaContextType | undefined>(undefined);
@@ -599,6 +600,10 @@ export const SerralheriaProvider: React.FC<{ children: ReactNode }> = ({ childre
     setActiveTab('orcamentos');
   };
 
+  const adicionarOrcamento = (novoOrc: OrçamentoItem) => {
+    setOrcamentos(prev => [novoOrc, ...prev]);
+  };
+
   const enviarWhatsApp = (orc: OrçamentoItem) => {
     const texto = encodeURIComponent(
       `Olá, ${orc.clienteNome}! Aqui é da Serralheria ForjaOS.\n\n` +
@@ -711,7 +716,8 @@ export const SerralheriaProvider: React.FC<{ children: ReactNode }> = ({ childre
         saveSignature,
         openReceiptModal,
         closeReceiptModal,
-        abrirNovoOrcamentoSimulador
+        abrirNovoOrcamentoSimulador,
+        adicionarOrcamento
       }}
     >
       {children}

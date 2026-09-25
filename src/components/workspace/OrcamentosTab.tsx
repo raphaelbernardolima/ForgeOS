@@ -14,17 +14,21 @@ import {
   MoreVertical,
   Check,
   Eye,
-  Layers
+  Layers,
+  Phone
 } from 'lucide-react';
 import { useSerralheria } from '../../context/SerralheriaContext';
 import { gerarPecaSVG, calcularMetricas } from '../../lib/proceduralSvg';
 import { CatalogoEstilosRibbon } from './CatalogoEstilosRibbon';
+import { NovoOrcamentoModal } from './NovoOrcamentoModal';
 import { Button } from '../ui/Button';
 import { EmptyState } from '../ui/EmptyState';
+import { OrçamentoItem } from '../../types';
 
 export const OrcamentosTab: React.FC = () => {
   const {
     orcamentos,
+    adicionarOrcamento,
     buscaOrcamentos,
     setBuscaOrcamentos,
     filtroStatusOrcamento,
@@ -37,10 +41,20 @@ export const OrcamentosTab: React.FC = () => {
     salvarPecaOrcamentoComoPreset,
     openSignatureModal,
     openReceiptModal,
-    abrirNovoOrcamentoSimulador,
+    setEditingConfig,
+    setViewMode,
     setActiveTab,
     notify
   } = useSerralheria();
+
+  // Controle de modal de novo orçamento rápido
+  const [modalNovoAberto, setModalNovoAberto] = useState<boolean>(false);
+
+  // Controle de menu de ações secundárias por card
+  const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
+
+  // Controle de visualização da biblioteca de modelos (fechada por padrão para não poluir a tela)
+  const [mostrarModelos, setMostrarModelos] = useState<boolean>(false);
 
   // Função para copiar o link de rastreio que o cliente final visualiza
   const handleCopiarLinkCliente = (orcId: string, clienteNome: string) => {
@@ -55,10 +69,34 @@ export const OrcamentosTab: React.FC = () => {
     );
   };
 
-  // Controle de menu de ações secundárias por card
-  const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
-  // Controle de visualização da biblioteca de modelos (fechada por padrão para não poluir a tela)
-  const [mostrarModelos, setMostrarModelos] = useState<boolean>(false);
+  const handleSalvarNovoOrcamento = (novoOrc: OrçamentoItem, enviarZap = false) => {
+    adicionarOrcamento(novoOrc);
+    notify(
+      `Orçamento #${novoOrc.id} criado`,
+      'success',
+      `Proposta de R$ ${novoOrc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} salva para ${novoOrc.clienteNome}.`
+    );
+
+    if (enviarZap) {
+      setTimeout(() => {
+        enviarWhatsApp(novoOrc);
+      }, 300);
+    }
+  };
+
+  const handleAbrirNoCad = (config: any) => {
+    setEditingConfig({
+      tipo: config.tipo,
+      genes: config.genes,
+      dimensoes: config.dimensoes,
+      corHex: config.corHex,
+      corNome: config.corNome,
+      clienteNome: config.clienteNome
+    });
+    setViewMode('simulador');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    notify('Aberto no simulador CAD', 'info', 'Ajuste nós de solda, barrotes e espessuras milimétricas.');
+  };
 
   // Filtragem e busca em tempo real
   const orcamentosFiltrados = orcamentos.filter(orc => {
@@ -99,28 +137,27 @@ export const OrcamentosTab: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-stretch sm:self-auto">
           {/* Botão para abrir modelos apenas quando o usuário desejar */}
           <button
             onClick={() => setMostrarModelos(prev => !prev)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium border transition-colors cursor-pointer min-h-[44px] ${
               mostrarModelos
                 ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
                 : 'bg-neutral-900 text-neutral-400 hover:text-neutral-200 border-neutral-800'
             }`}
           >
-            <Layers className="w-3.5 h-3.5" />
+            <Layers className="w-4 h-4" />
             <span>{mostrarModelos ? 'Ocultar Modelos' : 'Modelos Prontos'}</span>
           </button>
 
-          <Button
-            variant="primary"
-            onClick={abrirNovoOrcamentoSimulador}
-            leftIcon={<Plus className="w-4 h-4" />}
-            size="sm"
+          <button
+            onClick={() => setModalNovoAberto(true)}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-neutral-950 font-bold rounded-xl text-xs sm:text-sm transition-all shadow-sm active:scale-95 cursor-pointer min-h-[44px]"
           >
-            Criar Orçamento
-          </Button>
+            <Plus className="w-4 h-4" />
+            <span>Novo Orçamento</span>
+          </button>
         </div>
       </div>
 
@@ -142,12 +179,12 @@ export const OrcamentosTab: React.FC = () => {
             placeholder="Buscar por cliente, telefone ou #código..."
             value={buscaOrcamentos}
             onChange={(e) => setBuscaOrcamentos(e.target.value)}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-9 pr-8 py-2 text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber-400/80 transition-colors"
+            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-9 pr-8 py-2 text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber-400/80 transition-colors min-h-[40px]"
           />
           {buscaOrcamentos && (
             <button
               onClick={() => setBuscaOrcamentos('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 p-1"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 p-1 min-h-[32px] min-w-[32px] flex items-center justify-center cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -167,7 +204,7 @@ export const OrcamentosTab: React.FC = () => {
               <button
                 key={f.id}
                 onClick={() => setFiltroStatusOrcamento(f.id)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer min-h-[36px] ${
                   isSelected
                     ? 'bg-neutral-800 text-white font-semibold shadow-xs'
                     : 'text-neutral-400 hover:text-neutral-200'
@@ -183,7 +220,7 @@ export const OrcamentosTab: React.FC = () => {
         </div>
       </div>
 
-      {/* Lista de Orçamentos com Design Calmo e Sem Sobrecarga */}
+      {/* Lista de Orçamentos com Cards 100% Responsivos e Ergonomia Perfeita */}
       <div>
         {orcamentosFiltrados.length === 0 ? (
           <EmptyState
@@ -195,7 +232,7 @@ export const OrcamentosTab: React.FC = () => {
                 : 'Você não tem orçamentos com este status no momento.'
             }
             actionLabel={buscaOrcamentos ? 'Limpar Busca' : 'Criar Orçamento'}
-            onAction={buscaOrcamentos ? () => setBuscaOrcamentos('') : abrirNovoOrcamentoSimulador}
+            onAction={buscaOrcamentos ? () => setBuscaOrcamentos('') : () => setModalNovoAberto(true)}
           />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -207,50 +244,57 @@ export const OrcamentosTab: React.FC = () => {
               return (
                 <div
                   key={orc.id}
-                  className="bg-[#11141c] border border-neutral-800/80 hover:border-neutral-700/80 rounded-xl p-4 flex flex-col justify-between transition-colors shadow-xs relative"
+                  className="bg-[#11141c] border border-neutral-800/80 hover:border-neutral-700/80 rounded-2xl p-4 flex flex-col justify-between transition-colors shadow-xs relative"
                 >
-                  {/* Linha Superior: Cliente, Peça e Status Suave */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 text-xs text-neutral-400">
-                        <span className="font-mono font-medium text-amber-400/90">#{orc.id}</span>
-                        <span>·</span>
-                        <span className="capitalize">{orc.tipo}</span>
-                        <span>·</span>
-                        <span>{orc.dimensoes.largura}×{orc.dimensoes.altura} cm</span>
-                      </div>
-                      <h3 className="text-base font-semibold text-white mt-0.5 truncate">
-                        {orc.clienteNome}
-                      </h3>
-                      <p className="text-xs text-neutral-400 truncate mt-0.5">
-                        {orc.clienteTelefone}
-                      </p>
+                  {/* Linha 1 do Topo: Dados Técnicos Rápidos + Indicador de Status */}
+                  <div className="flex items-center justify-between gap-2 text-xs border-b border-neutral-850 pb-2.5">
+                    <div className="flex items-center gap-1.5 font-mono text-neutral-400 truncate">
+                      <span className="font-bold text-amber-400">#{orc.id}</span>
+                      <span>·</span>
+                      <span className="capitalize font-medium text-neutral-300">{orc.tipo}</span>
+                      <span>·</span>
+                      <span>{orc.dimensoes.largura}×{orc.dimensoes.altura} cm</span>
                     </div>
 
-                    {/* Status Textual Limpo (Zero Pills) */}
-                    <div className="text-right shrink-0">
-                      <div className="flex items-center justify-end gap-1.5 text-xs">
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            orc.status === 'aprovado'
-                              ? 'bg-emerald-400'
-                              : orc.status === 'convertido_os'
-                              ? 'bg-sky-400'
-                              : orc.diasSemResposta > 2
-                              ? 'bg-amber-400'
-                              : 'bg-neutral-500'
-                          }`}
-                        />
-                        <span className="font-medium text-neutral-200">
-                          {orc.status === 'convertido_os'
-                            ? 'Em Produção'
-                            : orc.status === 'aprovado'
-                            ? 'Aprovado'
-                            : 'Pendente'}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          orc.status === 'aprovado'
+                            ? 'bg-emerald-400'
+                            : orc.status === 'convertido_os'
+                            ? 'bg-sky-400'
+                            : orc.diasSemResposta > 2
+                            ? 'bg-amber-400'
+                            : 'bg-neutral-500'
+                        }`}
+                      />
+                      <span className="text-[11px] font-semibold text-neutral-200">
+                        {orc.status === 'convertido_os'
+                          ? 'Em Produção'
+                          : orc.status === 'aprovado'
+                          ? 'Aprovado'
+                          : 'Pendente'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Linha 2 do Topo: Cliente & Contato em Destaque */}
+                  <div className="mt-2.5">
+                    <h3 className="text-base sm:text-lg font-bold text-white leading-tight truncate">
+                      {orc.clienteNome}
+                    </h3>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-neutral-400">
+                      <a
+                        href={`https://wa.me/55${orc.clienteTelefone.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1 text-neutral-400 hover:text-emerald-400 transition-colors"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>{orc.clienteTelefone}</span>
+                      </a>
                       {orc.status === 'pendente' && orc.diasSemResposta > 2 && (
-                        <span className="text-[11px] text-amber-400/90 font-mono block mt-0.5">
+                        <span className="text-[11px] text-amber-400 font-mono">
                           Sem resposta há {orc.diasSemResposta}d
                         </span>
                       )}
@@ -258,18 +302,18 @@ export const OrcamentosTab: React.FC = () => {
                   </div>
 
                   {/* Corpo do Card: Miniatura Visual + Especificação + Preço */}
-                  <div className="my-3 py-2.5 px-3 bg-[#0d1017] rounded-lg border border-neutral-800/60 flex items-center justify-between gap-3">
+                  <div className="my-3 py-2.5 px-3 bg-[#0d1017] rounded-xl border border-neutral-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className="w-16 h-14 bg-[#08090e] rounded-md border border-neutral-800 flex items-center justify-center p-1 shrink-0 overflow-hidden"
+                        className="w-16 h-14 bg-[#08090e] rounded-lg border border-neutral-800 flex items-center justify-center p-1 shrink-0 overflow-hidden"
                         dangerouslySetInnerHTML={{ __html: svgThumb }}
                       />
-                      <div className="text-xs text-neutral-400 min-w-0">
+                      <div className="text-xs text-neutral-400 min-w-0 flex-1">
                         <p className="text-neutral-200 font-medium truncate">{orc.descricao}</p>
                         <div className="flex items-center gap-2 mt-1 text-[11px] text-neutral-400">
-                          <span>{metricas.pesoEstimadoKg} kg de aço</span>
+                          <span>{metricas.pesoEstimadoKg} kg aço</span>
                           <span>·</span>
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1 truncate">
                             <span
                               className="w-2 h-2 rounded-full shrink-0"
                               style={{ backgroundColor: orc.corHex }}
@@ -280,30 +324,30 @@ export const OrcamentosTab: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="text-right shrink-0">
-                      <span className="text-[10px] text-neutral-500 uppercase tracking-wider block font-mono">
+                    <div className="sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-neutral-800/60 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center">
+                      <span className="text-[10px] text-neutral-500 uppercase tracking-wider font-mono">
                         Valor Proposto
                       </span>
-                      <span className="text-base font-bold text-white font-mono tabular-nums">
+                      <span className="text-base sm:text-lg font-bold text-white font-mono tabular-nums">
                         R$ {orc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
 
-                  {/* Rodapé do Card: Apenas 1 ou 2 Ações Primárias Claras + Menu "..." */}
+                  {/* Rodapé do Card: Ações Primárias Claras + Menu "..." */}
                   <div className="pt-2.5 border-t border-neutral-800/60 flex items-center justify-between gap-2">
                     
-                    {/* Ações Primárias com Alta Aderência ao Polegar */}
-                    <div className="flex items-center gap-2 flex-wrap">
+                    {/* Ações com alta aderência ao polegar em mobile */}
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
                       {orc.status === 'pendente' && (
                         <>
                           <button
                             type="button"
                             onClick={() => enviarWhatsApp(orc)}
-                            className="min-h-[44px] px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
+                            className="flex-1 sm:flex-none min-h-[44px] px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
                             title="Enviar proposta pronta para o WhatsApp do cliente"
                           >
-                            <Send className="w-4 h-4" />
+                            <Send className="w-4 h-4 shrink-0" />
                             <span>Mandar no Zap</span>
                           </button>
                           <Button
@@ -311,7 +355,7 @@ export const OrcamentosTab: React.FC = () => {
                             size="sm"
                             onClick={() => aprovarOrcamento(orc.id)}
                             leftIcon={<Check className="w-4 h-4" />}
-                            className="min-h-[44px]"
+                            className="min-h-[44px] px-3.5"
                           >
                             Aprovar
                           </Button>
@@ -324,7 +368,7 @@ export const OrcamentosTab: React.FC = () => {
                           size="sm"
                           onClick={() => converterEmOS(orc)}
                           rightIcon={<ArrowRight className="w-4 h-4" />}
-                          className="min-h-[44px] font-bold"
+                          className="flex-1 sm:flex-none min-h-[44px] font-bold"
                         >
                           Iniciar Produção
                         </Button>
@@ -336,15 +380,15 @@ export const OrcamentosTab: React.FC = () => {
                           size="sm"
                           onClick={() => setActiveTab('producao')}
                           rightIcon={<ArrowRight className="w-4 h-4" />}
-                          className="min-h-[44px]"
+                          className="flex-1 sm:flex-none min-h-[44px]"
                         >
                           Ver na Fábrica
                         </Button>
                       )}
                     </div>
 
-                    {/* Menu de Ações Secundárias (...) com Bottom Sheet em Mobile */}
-                    <div className="relative">
+                    {/* Botão de Menu "..." (44x44px garantido) */}
+                    <div className="relative shrink-0">
                       <button
                         type="button"
                         onClick={() => setMenuAbertoId(menuAberto ? null : orc.id)}
@@ -537,6 +581,14 @@ export const OrcamentosTab: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Modal Descomplicado de Novo Orçamento Rápido */}
+      <NovoOrcamentoModal
+        isOpen={modalNovoAberto}
+        onClose={() => setModalNovoAberto(false)}
+        onSalvar={handleSalvarNovoOrcamento}
+        onAbrirNoCad={handleAbrirNoCad}
+      />
     </div>
   );
 };

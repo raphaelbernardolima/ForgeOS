@@ -28,8 +28,8 @@ export const AppWorkspace: React.FC = () => {
       
       {/* Barra de Resumo Executivo: Calma, minimalista e sem poluição visual */}
       <div className="border-b border-neutral-800/60 bg-[#0d1017]/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-sans">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 text-xs font-sans">
             
             {/* Card 1: Orçamentos em Aberto */}
             <button
@@ -37,14 +37,14 @@ export const AppWorkspace: React.FC = () => {
               className="text-left group cursor-pointer p-2 rounded-lg hover:bg-neutral-800/40 transition-colors"
             >
               <div className="flex items-center gap-1.5 text-neutral-400">
-                <FileText className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-[11px] font-medium">Orçamentos Ativos</span>
+                <FileText className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="text-[11px] font-medium truncate">Orçamentos Ativos</span>
               </div>
-              <div className="mt-1 flex items-baseline gap-1.5">
+              <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
                 <span className="text-base font-semibold text-white font-mono tabular-nums">
                   {orcamentosAtivos.length}
                 </span>
-                <span className="text-neutral-400 font-mono text-[11px] tabular-nums">
+                <span className="text-neutral-400 font-mono text-[10px] sm:text-[11px] tabular-nums truncate">
                   · R$ {valorTotalOrcamentos.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                 </span>
               </div>
@@ -56,15 +56,15 @@ export const AppWorkspace: React.FC = () => {
               className="text-left group cursor-pointer p-2 rounded-lg hover:bg-neutral-800/40 transition-colors"
             >
               <div className="flex items-center gap-1.5 text-neutral-400">
-                <Hammer className="w-3.5 h-3.5 text-sky-400" />
-                <span className="text-[11px] font-medium">Na Linha de Produção</span>
+                <Hammer className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                <span className="text-[11px] font-medium truncate">Na Fábrica</span>
               </div>
-              <div className="mt-1 flex items-baseline gap-1.5">
+              <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
                 <span className="text-base font-semibold text-white font-mono tabular-nums">
                   {emProducao}
                 </span>
-                <span className="text-neutral-400 text-[11px]">
-                  {emProducao === 1 ? 'peça em fabricação' : 'peças em fabricação'}
+                <span className="text-neutral-400 text-[10px] sm:text-[11px] truncate">
+                  {emProducao === 1 ? 'peça em produção' : 'peças em produção'}
                 </span>
               </div>
             </button>
@@ -75,15 +75,15 @@ export const AppWorkspace: React.FC = () => {
               className="text-left group cursor-pointer p-2 rounded-lg hover:bg-neutral-800/40 transition-colors"
             >
               <div className="flex items-center gap-1.5 text-neutral-400">
-                <AlertTriangle className={`w-3.5 h-3.5 ${estoqueCritico > 0 ? 'text-amber-400' : 'text-neutral-500'}`} />
-                <span className="text-[11px] font-medium">Estoque para Repor</span>
+                <AlertTriangle className={`w-3.5 h-3.5 shrink-0 ${estoqueCritico > 0 ? 'text-amber-400' : 'text-neutral-500'}`} />
+                <span className="text-[11px] font-medium truncate">Estoque Alerta</span>
               </div>
-              <div className="mt-1 flex items-baseline gap-1.5">
+              <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
                 <span className={`text-base font-semibold font-mono tabular-nums ${estoqueCritico > 0 ? 'text-amber-300' : 'text-neutral-300'}`}>
                   {estoqueCritico}
                 </span>
-                <span className="text-neutral-400 text-[11px]">
-                  {estoqueCritico === 0 ? 'níveis normais' : 'itens abaixo do mínimo'}
+                <span className="text-neutral-400 text-[10px] sm:text-[11px] truncate">
+                  {estoqueCritico === 0 ? 'níveis normais' : 'itens para repor'}
                 </span>
               </div>
             </button>
@@ -94,10 +94,10 @@ export const AppWorkspace: React.FC = () => {
               className="text-left group cursor-pointer p-2 rounded-lg hover:bg-neutral-800/40 transition-colors"
             >
               <div className="flex items-center gap-1.5 text-neutral-400">
-                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-[11px] font-medium">Saldo do Caixa</span>
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="text-[11px] font-medium truncate">Saldo do Caixa</span>
               </div>
-              <div className="mt-1 flex items-baseline gap-1.5">
+              <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
                 <span className="text-base font-semibold text-white font-mono tabular-nums">
                   R$ {saldoCaixa.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>

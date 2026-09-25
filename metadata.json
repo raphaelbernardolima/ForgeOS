@@ -1,0 +1,7 @@
+{
+  "name": "ForjaOS - Sistema Operacional & Simulador para Serralherias",
+  "description": "Software completo de gestão, orçamentos paramétricos, produção e simulador visual procedural SVG para serralherias de elite.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
